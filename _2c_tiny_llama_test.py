@@ -69,14 +69,37 @@ def build_prompt(instruction, context_block, question):
 # ------------------------------
 def generate(model, tokenizer, prompt):
     ''' Generate an answer from the model given the prompt. '''
-    raise NotImplementedError("Fill in the generate function logic here.")
+    # Tokenize the prompt
+    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    
+    # Generate response
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=150,        # Maximum number of tokens to generate
+            temperature=0.7,           # Controls randomness (lower = more deterministic)
+            do_sample=True,            # Enable sampling for more natural responses
+            top_p=0.9,                 # Nucleus sampling
+            pad_token_id=tokenizer.eos_token_id
+        )
+    
+    # Decode the generated tokens
+    full_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    
+    # Extract only the response part (after "### Response:")
+    if "### Response:" in full_text:
+        answer = full_text.split("### Response:")[-1].strip()
+    else:
+        answer = full_text.strip()
+    
+    return answer
 
 
 # ------------------------------
 # MAIN
 # ------------------------------
 def main():
-    instruction = "???" # TODO: What instruction will you give the model to obtain concise answers using the context?
+    instruction = "Answer the question concisely using the provided context." # TODO: What instruction will you give the model to obtain concise answers using the context?
 
     print("Loading PDF...")
     chunks = load_pdf_chunks(PDF_PATH)
