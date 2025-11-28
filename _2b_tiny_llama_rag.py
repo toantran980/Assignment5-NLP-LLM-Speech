@@ -81,7 +81,18 @@ def build_dataset(chunks, embs, embedder):
     Hint: See the structure for the _2a_tiny_llama_fine.py build_dataset function.
     What is QA-training? If you don't use it, does the model still perform well?
     '''
-    raise NotImplementedError("TODO: Implement dataset building using retrieval logic.")
+    dataset = []
+    for chunk in chunks:
+        ctx = retrieve_context(chunk, chunks, embedder, embs)
+        # Add 'answer' field - use the chunk as both question and answer for self-supervised learning
+        dataset.append({
+            "context": ctx, 
+            "question": chunk,
+            "instruction": "Answer the question concisely using the provided context.",
+            "answer": chunk 
+        })
+    
+    return Dataset.from_list(dataset)
 
 
 def format_example(example):
@@ -142,10 +153,10 @@ def main():
     # LoRA config
     # TODO: Fill in the blanks
     lora_config = LoraConfig(
-        r=???,
-        lora_alpha=???,
+        r=8,
+        lora_alpha=16,
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-        lora_dropout=???,
+        lora_dropout=0.1,
         bias="none",
         task_type="CAUSAL_LM"
     )
@@ -164,12 +175,12 @@ def main():
 
     training_args = TrainingArguments(
         output_dir=OUTPUT_DIR,
-        per_device_train_batch_size=???,
-        gradient_accumulation_steps=???,
+        per_device_train_batch_size=1,
+        gradient_accumulation_steps=4,
         fp16=(device == "cuda"),
-        learning_rate=???,
-        num_train_epochs=???,
-        logging_steps=???,
+        learning_rate=2e-5,
+        num_train_epochs=3,
+        logging_steps=10,
         save_strategy="epoch",
         report_to="none",
     )
