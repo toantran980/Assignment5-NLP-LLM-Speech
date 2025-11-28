@@ -39,17 +39,22 @@ def load_pdf_text(path):
 def build_dataset(syllabus_text):
     '''Given the syllabus text, build a Dataset of QA pairs with context.'''
     base = {
-        "instruction": "???", # TODO: What instruction will you give the model to obtain concise answers using the context?"
+        "instruction": "Answer the question concisely using the provided context.", # TODO: What instruction will you give the model to obtain concise answers using the context?"
         "context": syllabus_text,
     }
 
     # TODO: (Optional) Expand or modify these QA pairs as needed -- How does it influence model performance?
     qa_pairs = [
-        ("What is the course about?", "The syllabus describes the course's purpose."),
-        ("How is the grade determined?", "The syllabus lists grading components."),
-        ("What materials are required?", "The syllabus specifies required materials."),
-        ("What policies should students follow?", "The syllabus outlines course policies."),
-        ("What important dates are included?", "The syllabus includes important dates.")
+        ("What is the course about?", "The course covers concepts of Artificial Intelligence (AI), application software, and open-source projects, understanding AI capabilities, applications, impact, and ethical issues, and solving domain-specific problems with modern computing technologies."),
+        ("How is the grade determined?", "Grades are determined by class participation and attendance (9%), assignments (43%), and quizzes (48%). Letter grades are assigned using plus/minus scheme with A >=92%, etc."),
+        ("What materials are required?", "No textbook is required. Lecture notes and supplemental materials will be posted."),
+        ("What policies should students follow?", "Students must attend all lectures, participate actively, follow academic dishonesty policies, and check emails daily. Administrative drops for missing first two classes, strict withdrawal policy."),
+        ("What important dates are included?", "No specific dates listed, but tentative lecture schedule covers weeks 1-15 on topics like AI overview, HPC, ML, NLP, Generative AI."),
+        ("Who is the instructor?", "Christopher Ryu, Ph.D., Office: CS-421, Phone: (657) 278-7231, Email: tryu@fullerton.edu, Office Hours: Mon. and Wed. 4:00 pm – 5:30 pm or via ZOOM."),
+        ("What are the credits?", "3 units."),
+        ("What is the prerequisite?", "GE Area A.3 (Critical Thinking) or B.4 (Quantitative Reasoning)."),
+        ("What is the grading policy?", "Weighted sum of activities: participation 9%, assignments 43%, quizzes 48%. Plus/minus grading."),
+        ("What are the student learning goals?", "Understand AI concepts, applications, impact, ethics; identify domain-specific problems; develop AI applications; present creations effectively.")
     ]
 
     data = []
@@ -101,10 +106,10 @@ def main():
 
     print("Applying LoRA...")
     lora_config = LoraConfig(
-        r=???,
-        lora_alpha=???,
+        r=8,
+        lora_alpha=16,
         target_modules=["q_proj", "v_proj"],
-        lora_dropout=???,
+        lora_dropout=0.1,
         bias="none",
         task_type="CAUSAL_LM"
     )
@@ -116,7 +121,7 @@ def main():
         lambda x: tokenizer(
             x["text"],
             truncation=True,
-            max_length=???,
+            max_length=512,
         ),
         batched=True,
         remove_columns=dataset.column_names
@@ -131,12 +136,12 @@ def main():
     # TODO: Fill in the blanks
     training_args = TrainingArguments(
         output_dir=OUTPUT_DIR,
-        per_device_train_batch_size=???,
-        gradient_accumulation_steps=???,
+        per_device_train_batch_size=1,
+        gradient_accumulation_steps=4,
         bf16=(device == "cuda"),
-        learning_rate=???,
-        num_train_epochs=???,
-        logging_steps=???,
+        learning_rate=2e-4,
+        num_train_epochs=3,
+        logging_steps=10,
         save_strategy="epoch",
         report_to="none",
         optim="paged_adamw_8bit",
