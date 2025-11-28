@@ -84,7 +84,6 @@ def build_dataset(chunks, embs, embedder):
     dataset = []
     for chunk in chunks:
         ctx = retrieve_context(chunk, chunks, embedder, embs)
-        # Add 'answer' field - use the chunk as both question and answer for self-supervised learning
         dataset.append({
             "context": ctx, 
             "question": chunk,
