@@ -66,19 +66,42 @@ def load_true_chunks(true_txt_path):
     Load the true receipt contents file and split it into reasonable 'chunks'
     (one chunk per non-empty paragraph/line). Returns list of chunk strings.
     """
-    raise NotImplementedError("Fill in the load_true_chunks function logic here.")
+    true_txt_path = os.path.expanduser(true_txt_path)
+    with open(true_txt_path, "r", encoding="utf-8", errors="replace") as f:
+        true_text = f.read().strip()
+    chunks = re.split(r'(?<!\n)\n(?!\n)', true_text)
+    chunks = [c.strip() for c in chunks if c.strip()]
+    return chunks
+
 
 def build_and_save_embeddings(chunks, model_name, out_dir):
     """
     Embed the chunks with a SentenceTransformer model and save chunks.npy and embeddings.npy
     """
-    raise NotImplementedError("Fill in the build_and_save_embeddings function logic here.")
+    chunks = [c.strip() for c in chunks if c.strip()]
+    embedder = SentenceTransformer(model_name)
+    embs = embedder.encode(chunks, convert_to_numpy=True)
+    # normalize embeddings
+    norms = np.linalg.norm(embs, axis=1, keepdims=True)
+    embs = embs / norms
+    os.makedirs(out_dir, exist_ok=True)
+    np.save(os.path.join(out_dir, "chunks.npy"), np.array(chunks, dtype=object))
+    np.save(os.path.join(out_dir, "embeddings.npy"), embs)
+    print("\n>>> SAVED RAG ARTIFACTS (MiniLM-based)\n")
+    return embs
 
 def semantic_search_single(query, embedder, chunks, embeddings, top_k=1):
     """
     Returns list of (idx, chunk, score) for top_k matches to query
     """
-    raise NotImplementedError("Fill in the semantic_search_single function logic here.")
+    q_emb = embedder.encode([query], convert_to_numpy=True)[0]
+    # normalize query embedding
+    q_norm = np.linalg.norm(q_emb)
+    if q_norm > 0:
+        q_emb = q_emb / q_norm
+    sims = np.dot(embeddings, q_emb)
+    idxs = sims.argsort()[-top_k:][::-1]
+    return [(idx, chunks[idx], sims[idx]) for idx in idxs]
 
 def simple_baseline_exact_match(extracted_line, true_text_lower):
     """
