@@ -46,7 +46,7 @@ def tts_from_text_file(text_file: str, out_wav: str, voice_index: int = None, ra
     if not text:
         text = "(no text)"
     # TODO: Fill in the missing argument(s)
-    return tts_save(???)
+    return tts_save(text, out_wav, voice_index, rate)
 
 def tts_from_text_files(text_files: List[str], out_wavs: List[str], voice_index: int = None, rate: int = 150) -> List[str]:
     """
@@ -59,7 +59,7 @@ def tts_from_text_files(text_files: List[str], out_wavs: List[str], voice_index:
     for tf, ow in zip(text_files, out_wavs):
         print(f"[tts_rag] Synthesizing: {tf} -> {ow}")
         # TODO: Fill in the missing argument(s)
-        outp = tts_from_text_file(???)
+        outp = tts_from_text_file(tf, ow, voice_index, rate)
         saved.append(outp)
     return saved
 

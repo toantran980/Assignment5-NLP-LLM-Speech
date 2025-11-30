@@ -170,13 +170,13 @@ def query_rag(question: str, rag_dir: str = "./tiny_llama_rag_model", base_model
     """
     chunks, embeddings, embedder = load_retriever(rag_dir)
     # TODO: Fill in the argument(s) 
-    top = semantic_search(???)
+    top = semantic_search(question, chunks, embeddings, embedder, top_k)
     joined = "\n\n".join([c for (_, c, _) in top])
     if len(joined) > 1500:
         joined = joined[:1500] + " ..."
     # TODO: Customize system prompt as needed
     prompt = (
-        "### System:\n???\n\n"
+        "### System:\nYou are a concise and helpful assistant. Use ONLY the provided context to answer the question briefly and factually.\n\n"
         "### Context:\n" + joined + "\n\n"
         "### Instruction:\n" + question + "\n\n"
         "### Response:\n"
@@ -200,7 +200,7 @@ def process_audio_to_text_file(audio_path: str, out_txt_path: str, stt_backend: 
 
     print(f"[stt_rag] Transcribing '{audio_path}' using backend={stt_backend} ...")
     # TODO: Fill in the argument(s)
-    question_text = transcribe_audio(???)
+    question_text = transcribe_audio(audio_path, backend=stt_backend)
     print("[stt_rag] Recognized text:")
     print(textwrap.fill(question_text or "(no text recognized)", width=100))
 
@@ -215,7 +215,7 @@ def process_audio_to_text_file(audio_path: str, out_txt_path: str, stt_backend: 
 
     print("[stt_rag] Querying RAG model...")
     # TODO: Fill in the argument(s)
-    rag_res = query_rag(???)
+    rag_res = query_rag(question_text, rag_dir=rag_dir, base_model_name=base_model_name, top_k=top_k)
     answer = rag_res.get("answer", "").strip() or "(no answer from model)"
 
     # Save to file (only the answer text saved, one-line or multi-line)
